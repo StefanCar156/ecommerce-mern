@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Chrome, Safari, Edge, Opera */
+#cart-item-quantity::-webkit-outer-spin-button,
+#cart-item-quantity::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+#cart-item-quantity[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Custom Scrollbar Styles */
+.scrollbar-none::-webkit-scrollbar {
+  width: 0; /* Set the width of the scrollbar */
+}

@@ -14,9 +14,11 @@ app.use(cors())
 
 // Routers
 import productsRouter from "./routes/products.js"
+import cartRouter from "./routes/cart.js"
 
 // Routes
 app.use("/api/v1/products", productsRouter)
+app.use("/api/v1/cart", cartRouter)
 
 // PORT
 const PORT = process.env.PORT || 5000

@@ -2,11 +2,20 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { getProduct } from "../../api/productService"
 import { formatCurrency } from "../../utils/formatCurrency"
+import { useDispatch } from "react-redux"
+import { addToCartAction } from "../../store/slices/cartSlice"
 
 const Product = () => {
-  const { productID } = useParams()
+  // Redux
+  const dispatch = useDispatch()
+
+  // State
   const [product, setProduct] = useState({})
   const [isLoading, setIsLoading] = useState(true)
+  const [quantity, setQuantity] = useState(1)
+
+  // Params
+  const { productID } = useParams()
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -17,6 +26,15 @@ const Product = () => {
 
     fetchProduct()
   }, [productID])
+
+  const handleAddToCart = async () => {
+    try {
+      dispatch(addToCartAction(product._id, quantity))
+      setQuantity(1)
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   if (isLoading) {
     return <h1>loading</h1>
@@ -52,9 +70,26 @@ const Product = () => {
           <p className="text-gray-600 mb-4">Brand: {product.brand}</p>
           <p className="text-yellow-500 mb-4">Rating: {product.rating}</p>
 
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-md">
-            Add to Cart
-          </button>
+          <div className="flex items-center space-x-4">
+            <label htmlFor="quantity">Quantity:</label>
+            <input
+              type="number"
+              id="quantity"
+              name="quantity"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              min="1"
+              max={product.quantity}
+              className="w-16 p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+            />
+
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded-md"
+              onClick={handleAddToCart}
+            >
+              Add to Cart
+            </button>
+          </div>
         </div>
       </div>
 
