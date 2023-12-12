@@ -18,6 +18,23 @@ const getAllProducts = async (req, res) => {
   }
 }
 
+const getProduct = async (req, res) => {
+  try {
+    const productID = req.params.productID
+
+    const product = await Product.findOne({ _id: productID })
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found!" })
+    }
+
+    return res.status(200).json(product)
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: "Internal server error" })
+  }
+}
+
 const searchProductsByName = async (req, res) => {
   try {
     const { query, page = 1, pageSize = 5 } = req.query
@@ -112,6 +129,7 @@ const getAllBrands = async (req, res) => {
 
 export {
   getAllProducts,
+  getProduct,
   searchProductsByName,
   searchProductsByCategory,
   searchProductsByBrand,

@@ -26,6 +26,10 @@ export const searchProductsByBrand = (brand, page, pageSize) => {
   )
 }
 
+export const getProduct = (id) => {
+  return axios.get(`${BASE_URL}/api/v1/products/product/${id}`)
+}
+
 export const getAllCategories = () => {
   return axios.get(`${BASE_URL}/api/v1/products/categories`)
 }

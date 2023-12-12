@@ -1,6 +1,7 @@
 import express from "express"
 import {
   getAllProducts,
+  getProduct,
   searchProductsByName,
   searchProductsByCategory,
   searchProductsByBrand,
@@ -10,6 +11,7 @@ import {
 const router = express.Router()
 
 router.route("/").get(getAllProducts)
+router.route("/product/:productID").get(getProduct)
 router.route("/search").get(searchProductsByName)
 router.route("/category/:category").get(searchProductsByCategory)
 router.route("/brand/:brand").get(searchProductsByBrand)
