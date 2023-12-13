@@ -13,3 +13,7 @@ export const addItemToCart = (productID, quantity) => {
 export const removeItemFromCart = (id) => {
   return axios.delete(`${BASE_URL}/api/v1/cart/${id}`)
 }
+
+export const updateItemQuantity = (id, newQuantity) => {
+  return axios.patch(`${BASE_URL}/api/v1/cart/${id}`, { newQuantity })
+}

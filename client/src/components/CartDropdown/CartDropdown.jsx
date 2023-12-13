@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import {
   fetchCartItems,
   removeItemFromCartAction,
+  changeItemQuantityAction,
 } from "../../store/slices/cartSlice"
 import { getProduct } from "../../api/productService"
 import { formatCurrency } from "../../utils/formatCurrency"
@@ -21,6 +22,7 @@ const CartDropdown = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [detailedCartItems, setDetailedCartItems] = useState([])
   const [cartTotal, setCartTotal] = useState(0)
+  const dropdownRef = useRef(null)
 
   useEffect(() => {
     dispatch(fetchCartItems())
@@ -58,12 +60,38 @@ const CartDropdown = () => {
     }
   }
 
-  const handleChangeItemQuantity = () => {
-    console.log(id)
+  const handleChangeItemQuantity = async (id, newQuantity) => {
+    if (newQuantity === 0) {
+      return handleRemoveCartItem(id)
+    }
+
+    try {
+      dispatch(changeItemQuantityAction(id, newQuantity))
+    } catch (error) {
+      console.error(error)
+    }
   }
 
+  const handleCloseDropdown = (event) => {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target) &&
+      !event.target.classList.contains("add-to-cart-btn")
+    ) {
+      setIsDropdownOpen(false)
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener("click", handleCloseDropdown)
+
+    return () => {
+      document.removeEventListener("click", handleCloseDropdown)
+    }
+  }, [])
+
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
         <FaShoppingCart className="text-2xl" />
       </button>
@@ -75,9 +103,9 @@ const CartDropdown = () => {
                 <div className="border-t-4 border-blue-500 border-solid rounded-full animate-spin w-12 h-12"></div>
               </div>
             )}
-            {detailedCartItems.map((item) => (
+            {detailedCartItems.map((item, i) => (
               <li
-                key={item.data._id}
+                key={i}
                 className="flex items-center justify-between space-x-4 pb-2 mb-2 last-of-type:mb-0 w-full border-b"
               >
                 <img
@@ -88,19 +116,23 @@ const CartDropdown = () => {
                 <div className="flex flex-col items-center">
                   <p className="text-base font-semibold">{item.data.name}</p>
                   <div className="flex items-center gap-4 mt-2">
-                    <button className="transition-transform transform active:scale-125">
+                    <button
+                      onClick={() =>
+                        handleChangeItemQuantity(item._id, item.quantity - 1)
+                      }
+                      className="transition-transform transform active:scale-125"
+                    >
                       <FaMinus />
                     </button>
-                    <input
-                      type="number"
-                      name="cart-item-quantity"
-                      id="cart-item-quantity"
-                      value={item.quantity}
-                      onChange={() => handleChangeItemQuantity(item._id)}
-                      min="1"
-                      className="w-10 text-center appearance-none"
-                    />
-                    <button className="transition-transform transform active:scale-125">
+                    <span className="font-semibold text-lg">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() =>
+                        handleChangeItemQuantity(item._id, item.quantity + 1)
+                      }
+                      className="transition-transform transform active:scale-125"
+                    >
                       <FaPlus />
                     </button>
                   </div>

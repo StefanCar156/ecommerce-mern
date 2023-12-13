@@ -3,6 +3,7 @@ import {
   getCartItems,
   addItemToCart,
   removeItemFromCart,
+  updateItemQuantity,
 } from "../../api/cartService"
 
 const cartSlice = createSlice({
@@ -14,16 +15,6 @@ const cartSlice = createSlice({
   },
   reducers: {
     setCartItems: (state, action) => {
-      state.cartItems = action.payload
-      state.loading = false
-      state.error = null
-    },
-    addToCartReducer: (state, action) => {
-      state.cartItems = action.payload
-      state.loading = false
-      state.error = null
-    },
-    removeFromCartReducer: (state, action) => {
       state.cartItems = action.payload
       state.loading = false
       state.error = null
@@ -54,11 +45,8 @@ export const addToCartAction = (productID, quantity) => async (dispatch) => {
 
     await addItemToCart(productID, quantity)
 
-    // After the request is successful, fetch the updated cart
     const updatedCartResponse = await getCartItems()
-
-    // Dispatch the addToCart action with the updated cart items
-    dispatch(addToCartReducer(updatedCartResponse.data))
+    dispatch(setCartItems(updatedCartResponse.data))
   } catch (error) {
     console.error(error)
   }
@@ -71,19 +59,28 @@ export const removeItemFromCartAction = (id) => async (dispatch) => {
     await removeItemFromCart(id)
 
     const updatedCartResponse = await getCartItems()
-
-    dispatch(removeFromCartReducer(updatedCartResponse.data))
+    dispatch(setCartItems(updatedCartResponse.data))
   } catch (error) {
     console.error(error)
   }
 }
 
-export const {
-  setCartItems,
-  addToCartReducer,
-  removeFromCartReducer,
-  setLoading,
-  setError,
-} = cartSlice.actions
+export const changeItemQuantityAction =
+  (id, newQuantity) => async (dispatch) => {
+    try {
+      dispatch(setLoading())
+
+      // Call your API to update the quantity
+      await updateItemQuantity(id, newQuantity)
+
+      // Fetch updated cart items after updating the quantity
+      const updatedCartResponse = await getCartItems()
+      dispatch(setCartItems(updatedCartResponse.data))
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+export const { setCartItems, setLoading, setError } = cartSlice.actions
 
 export default cartSlice.reducer

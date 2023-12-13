@@ -45,7 +45,7 @@ const removeItemFromCart = async (req, res) => {
 const updateItemQuantity = async (req, res) => {
   try {
     const itemID = req.params.itemID
-    const newQuantity = req.body.quantity
+    const newQuantity = req.body.newQuantity
 
     const item = await CartItem.findOne({ _id: itemID })
 
