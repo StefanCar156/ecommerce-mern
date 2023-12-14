@@ -1,10 +1,24 @@
-import CartItem from "../models/CartItem.js"
+import Cart from "../models/Cart.js"
 
-const getCartItems = async (req, res) => {
+const getCart = async (req, res) => {
   try {
-    const items = await CartItem.find({})
+    const cartID = req.params.cartID
 
-    return res.status(200).json(items)
+    const cart = await Cart.findOne({ _id: cartID })
+
+    return res.status(200).json(cart)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+const createCart = async (req, res) => {
+  try {
+    const newCart = await Cart.create({ products: [] })
+
+    const cart = await newCart.save()
+    return res.status(201).json({ cartID: cart._id })
   } catch (error) {
     console.log(error)
     return res.status(500).json({ message: "Internal server error" })
@@ -13,10 +27,30 @@ const getCartItems = async (req, res) => {
 
 const addItemToCart = async (req, res) => {
   try {
-    const newItem = await CartItem(req.body)
+    const { cartID } = req.params
+    const { productID, quantity } = req.body
 
-    await newItem.save()
-    return res.status(201).json({ message: "Item added to cart!" })
+    const cart = await Cart.findOne({ _id: cartID })
+
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" })
+    }
+
+    // If product is already in the cart, just increase quantity
+    // Otherwise, add new item
+    const existingItem = cart.products.find(
+      (item) => item.productID == productID
+    )
+
+    if (existingItem) {
+      existingItem.quantity += quantity
+    } else {
+      cart.products.push({ productID, quantity })
+    }
+
+    await cart.save()
+
+    return res.status(200).json(cart)
   } catch (error) {
     console.log(error)
     return res.status(500).json({ message: "Internal server error" })
@@ -25,17 +59,25 @@ const addItemToCart = async (req, res) => {
 
 const removeItemFromCart = async (req, res) => {
   try {
-    const itemID = req.params.itemID
+    const { cartID, itemID } = req.params
 
-    const item = await CartItem.findOne({ _id: itemID })
+    const cart = await Cart.findById(cartID)
 
-    if (!item) {
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" })
+    }
+
+    const itemIndex = cart.products.findIndex((item) => item._id == itemID)
+
+    if (itemIndex === -1) {
       return res.status(404).json({ message: "Item not found" })
     }
 
-    await CartItem.deleteOne({ _id: itemID })
+    cart.products.splice(itemIndex, 1)
 
-    return res.status(200).json({ message: "Item removed successfully" })
+    await cart.save()
+
+    return res.status(200).json(cart)
   } catch (error) {
     console.log(error)
     return res.status(500).json({ message: "Internal server error" })
@@ -44,39 +86,36 @@ const removeItemFromCart = async (req, res) => {
 
 const updateItemQuantity = async (req, res) => {
   try {
-    const itemID = req.params.itemID
-    const newQuantity = req.body.newQuantity
+    const { cartID, itemID } = req.params
+    const { newQuantity } = req.body
 
-    const item = await CartItem.findOne({ _id: itemID })
+    const cart = await Cart.findById(cartID)
 
-    if (!item) {
-      return res.status(404).json({ message: "Item not found" })
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" })
     }
 
-    await CartItem.updateOne({ _id: itemID }, { quantity: newQuantity })
+    const cartItem = cart.products.find((item) => item._id == itemID)
 
-    return res.status(201).json({ message: "Quantity updated successfully" })
+    if (!cartItem) {
+      return res.status(404).json({ message: "Item not found in the cart" })
+    }
+
+    cartItem.quantity = newQuantity
+
+    await cart.save()
+
+    return res.status(201).json(cart)
   } catch (error) {
     console.log(error)
     return res.status(500).json({ message: "Internal server error" })
   }
 }
 
-// const clearCart = async (req, res) => {
-//   try {
-//     await CartItem.deleteMany({})
-
-//     return res.status(204).json({ message: "Cart cleared successfully" })
-//   } catch (error) {
-//     console.log(error)
-//     return res.status(500).json({ message: "Internal server error" })
-//   }
-// }
-
 export {
-  getCartItems,
+  getCart,
+  createCart,
   addItemToCart,
   removeItemFromCart,
   updateItemQuantity,
-  //   clearCart,
 }

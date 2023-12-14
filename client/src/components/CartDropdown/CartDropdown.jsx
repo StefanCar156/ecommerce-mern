@@ -1,20 +1,22 @@
 import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import {
-  fetchCartItems,
   removeItemFromCartAction,
   changeItemQuantityAction,
 } from "../../store/slices/cartSlice"
+import { getCartAction } from "../../store/slices/cartSlice"
 import { getProduct } from "../../api/productService"
 import { formatCurrency } from "../../utils/formatCurrency"
+import { fetchDetailedCartItems } from "../../utils/cartUtils"
 import { Link } from "react-router-dom"
 import { FaShoppingCart, FaMinus, FaPlus } from "react-icons/fa"
 import { IoClose } from "react-icons/io5"
+import { useCookies } from "react-cookie"
 
 const CartDropdown = () => {
   // Redux
   const dispatch = useDispatch()
-  const cartItems = useSelector((state) => state.cart.cartItems)
+  const cart = useSelector((state) => state.cart.cart)
   const loading = useSelector((state) => state.cart.loading)
   const errors = useSelector((state) => state.cart.errors)
 
@@ -24,24 +26,22 @@ const CartDropdown = () => {
   const [cartTotal, setCartTotal] = useState(0)
   const dropdownRef = useRef(null)
 
+  const [cookies, _] = useCookies(["cart_id"])
+
   useEffect(() => {
-    dispatch(fetchCartItems())
-  }, [])
+    if (cookies.cart_id) {
+      dispatch(getCartAction(cookies.cart_id))
+    }
+  }, [cookies.cart_id])
 
   useEffect(() => {
     const fetchCartItemsDetails = async () => {
-      const newDetailedCartItems = await Promise.all(
-        cartItems.map(async (cartItem) => {
-          const productDetails = await getProduct(cartItem.productID)
-          return { ...cartItem, ...productDetails }
-        })
-      )
-
+      const newDetailedCartItems = await fetchDetailedCartItems(cart.products)
       setDetailedCartItems(newDetailedCartItems)
     }
 
-    fetchCartItemsDetails()
-  }, [cartItems])
+    if (cart && Object.keys(cart).length > 0) fetchCartItemsDetails()
+  }, [cart])
 
   useEffect(() => {
     const total = detailedCartItems.reduce(
@@ -52,9 +52,9 @@ const CartDropdown = () => {
     setCartTotal(total)
   }, [detailedCartItems])
 
-  const handleRemoveCartItem = async (id) => {
+  const handleRemoveCartItem = async (itemID) => {
     try {
-      dispatch(removeItemFromCartAction(id))
+      dispatch(removeItemFromCartAction(cookies.cart_id, itemID))
     } catch (error) {
       console.error(error)
     }
@@ -66,7 +66,7 @@ const CartDropdown = () => {
     }
 
     try {
-      dispatch(changeItemQuantityAction(id, newQuantity))
+      dispatch(changeItemQuantityAction(cookies.cart_id, id, newQuantity))
     } catch (error) {
       console.error(error)
     }
@@ -91,7 +91,7 @@ const CartDropdown = () => {
   }, [])
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative z-50" ref={dropdownRef}>
       <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
         <FaShoppingCart className="text-2xl" />
       </button>

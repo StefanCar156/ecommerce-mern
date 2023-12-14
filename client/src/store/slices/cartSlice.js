@@ -1,23 +1,28 @@
 import { createSlice } from "@reduxjs/toolkit"
 import {
-  getCartItems,
+  getCart,
   addItemToCart,
   removeItemFromCart,
   updateItemQuantity,
+  createCart,
 } from "../../api/cartService"
 
 const cartSlice = createSlice({
   name: "cart",
   initialState: {
-    cartItems: [],
+    cartID: null,
+    cart: {},
     loading: false,
     error: null,
   },
   reducers: {
-    setCartItems: (state, action) => {
-      state.cartItems = action.payload
+    setCartID: (state, action) => {
+      state.cartID = action.payload
       state.loading = false
-      state.error = null
+    },
+    setCart: (state, action) => {
+      state.cart = action.payload
+      state.loading = false
     },
     setLoading: (state) => {
       state.loading = true
@@ -29,58 +34,70 @@ const cartSlice = createSlice({
   },
 })
 
-export const fetchCartItems = () => async (dispatch) => {
+export const { setCartID, setCart, setLoading, setError } = cartSlice.actions
+export default cartSlice.reducer
+
+export const createCartAction = () => async (dispatch) => {
   try {
-    dispatch(setLoading())
-    const res = await getCartItems()
-    dispatch(setCartItems(res.data))
+    const res = await createCart()
+    dispatch(setCartID(res.data.cartID))
   } catch (error) {
-    dispatch(setError(error.message))
+    dispatch(setError(error))
   }
 }
 
-export const addToCartAction = (productID, quantity) => async (dispatch) => {
+export const getCartAction = (cartID) => async (dispatch) => {
   try {
     dispatch(setLoading())
+    dispatch(setCartID(cartID))
 
-    await addItemToCart(productID, quantity)
-
-    const updatedCartResponse = await getCartItems()
-    dispatch(setCartItems(updatedCartResponse.data))
+    const res = await getCart(cartID)
+    dispatch(setCart(res.data))
   } catch (error) {
-    console.error(error)
+    dispatch(setError(error))
   }
 }
 
-export const removeItemFromCartAction = (id) => async (dispatch) => {
-  try {
-    dispatch(setLoading())
-
-    await removeItemFromCart(id)
-
-    const updatedCartResponse = await getCartItems()
-    dispatch(setCartItems(updatedCartResponse.data))
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-export const changeItemQuantityAction =
-  (id, newQuantity) => async (dispatch) => {
+export const addItemToCartAction =
+  (cartID, productID, quantity) => async (dispatch) => {
     try {
       dispatch(setLoading())
+      dispatch(setCartID(cartID))
 
-      // Call your API to update the quantity
-      await updateItemQuantity(id, newQuantity)
+      const res = await addItemToCart(cartID, productID, quantity)
 
-      // Fetch updated cart items after updating the quantity
-      const updatedCartResponse = await getCartItems()
-      dispatch(setCartItems(updatedCartResponse.data))
+      if (res.status === 404) {
+        createCartAction(cartID)
+      }
+
+      dispatch(setCart(res.data))
     } catch (error) {
-      console.error(error)
+      dispatch(setError(error))
     }
   }
 
-export const { setCartItems, setLoading, setError } = cartSlice.actions
+export const removeItemFromCartAction =
+  (cartID, itemID) => async (dispatch) => {
+    try {
+      dispatch(setLoading())
+      dispatch(setCartID(cartID))
 
-export default cartSlice.reducer
+      const res = await removeItemFromCart(cartID, itemID)
+      dispatch(setCart(res.data))
+    } catch (error) {
+      dispatch(setError(error))
+    }
+  }
+
+export const changeItemQuantityAction =
+  (cartID, itemID, newQuantity) => async (dispatch) => {
+    try {
+      dispatch(setLoading())
+      dispatch(setCartID(cartID))
+
+      const res = await updateItemQuantity(cartID, itemID, newQuantity)
+      dispatch(setCart(res.data))
+    } catch (error) {
+      dispatch(setError(error))
+    }
+  }

@@ -1,14 +1,16 @@
 import React from "react"
 import { useDispatch } from "react-redux"
-import { addToCartAction } from "../../store/slices/cartSlice"
+import { addItemToCartAction } from "../../store/slices/cartSlice"
 import { formatCurrency } from "../../utils/formatCurrency"
 import { Link } from "react-router-dom"
+import { useCookies } from "react-cookie"
 
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch()
+  const [cookies, _] = useCookies(["cart_id"])
 
   const handleAddToCart = () => {
-    dispatch(addToCartAction(product._id, 1))
+    dispatch(addItemToCartAction(cookies.cart_id, product._id, 1))
   }
 
   return (
@@ -24,7 +26,7 @@ const ProductCard = ({ product }) => {
       </p>
       <button
         onClick={handleAddToCart}
-        className="bg-blue-500 text-white px-4 py-2 rounded-full mt-2 add-to-cart-btn"
+        className="bg-blue-500 text-white px-4 py-2 rounded-sm mt-2 transition-transform transform active:scale-125 add-to-cart-btn"
       >
         Add to Cart
       </button>

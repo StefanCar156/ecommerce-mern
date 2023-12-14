@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom"
 import { getProduct } from "../../api/productService"
 import { formatCurrency } from "../../utils/formatCurrency"
 import { useDispatch } from "react-redux"
-import { addToCartAction } from "../../store/slices/cartSlice"
+import { addItemToCartAction } from "../../store/slices/cartSlice"
+import { useCookies } from "react-cookie"
 
 const Product = () => {
   // Redux
@@ -13,6 +14,7 @@ const Product = () => {
   const [product, setProduct] = useState({})
   const [isLoading, setIsLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
+  const [cookies, _] = useCookies(["cart_id"])
 
   // Params
   const { productID } = useParams()
@@ -29,7 +31,7 @@ const Product = () => {
 
   const handleAddToCart = async () => {
     try {
-      dispatch(addToCartAction(product._id, quantity))
+      dispatch(addItemToCartAction(cookies.cart_id, product._id, quantity))
       setQuantity(1)
     } catch (error) {
       console.error(error)

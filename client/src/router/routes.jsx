@@ -5,6 +5,8 @@ import Product from "../pages/Product/Product"
 import Sidebar from "../components/Sidebar/Sidebar"
 import Navbar from "../components/Navbar/Navbar"
 import SearchResults from "../pages/SearchResults/SearchResults"
+import Checkout from "../pages/Checkout/Checkout"
+import Order from "../pages/Order/Order"
 
 const RoutesComponent = () => {
   return (
@@ -32,6 +34,8 @@ const RoutesComponent = () => {
                 element={<SearchResults />}
               />
               <Route path="/products/search" element={<SearchResults />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/orders/:orderID" element={<Order />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
