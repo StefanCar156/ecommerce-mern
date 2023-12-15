@@ -11,6 +11,18 @@ const getOrder = async (req, res) => {
       return res.status(404).json({ message: "Order not found" })
     }
 
+    let timePassed = Date.now() - order.orderDate
+
+    if (timePassed > 86400000 && timePassed <= 172800000) {
+      order.status = "Awaiting Shipment"
+    } else if (timePassed > 172800000 && timePassed <= 345600000) {
+      order.status = "Shipped"
+    } else if (timePassed > 345600000) {
+      order.status = "Delivered"
+    }
+
+    await order.save()
+
     return res.status(200).json(order)
   } catch (error) {
     console.error(error)
